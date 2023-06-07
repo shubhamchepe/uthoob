@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "608392861272",
+    "project_id": "uthoob-c3950",
+    "storage_bucket": "uthoob-c3950.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608392861272:android:e0577b9001c310a5addc2d",
+        "android_client_info": {
+          "package_name": "com.uthoob.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608392861272-nlt89bknr37g0bg6gh30s9adda68oite.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uthoob.app",
+            "certificate_hash": "950c705162744ae8f9b43171bfedd3d8b9edaa15"
+          }
+        },
+        {
+          "client_id": "608392861272-4fjcdgbv2n1145msou2ra1fsto9hrmmt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbSkNR1w8-XA2TEcu49dV94x_DQtn6hgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608392861272-4fjcdgbv2n1145msou2ra1fsto9hrmmt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
