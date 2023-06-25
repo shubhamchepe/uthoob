@@ -9,6 +9,8 @@ import moment from 'moment';
 import {refresh} from 'react-native-app-auth';
 import DeviceInfo from 'react-native-device-info';
 import firestore from '@react-native-firebase/firestore';
+import {CLIENT_ID,API_KEY} from '@env';
+
 
 const SplashScreen = ({navigation}) => {
   const [LoggedIn, setLoggedIn] = useState(false);
@@ -20,8 +22,7 @@ const SplashScreen = ({navigation}) => {
   const {height, width} = useWindowDimensions();
 
   const config = {
-    clientId:
-      '608392861272-53k4e3462oe4m41369kqujcbn8650kg5.apps.googleusercontent.com',
+    clientId: CLIENT_ID,
     redirectUrl: 'com.uthoob.app:/callback',
     scopes: [
       'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -48,7 +49,7 @@ const SplashScreen = ({navigation}) => {
           Authorization: `Bearer ${something.InitialAccessToken}`,
         }; // auth header with bearer token
         fetch(
-          'https://youtube.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&key=AIzaSyAWMysWX6k-_j4bJ6oqvbKhRY1UiGjoQGY',
+          `https://youtube.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&key=${API_KEY}`,
           {headers},
         )
           .then(response => response.json())
