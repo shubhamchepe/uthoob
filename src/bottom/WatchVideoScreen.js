@@ -1,20 +1,51 @@
 import {
   View,
   Text,
-  StyleSheet,
-  Button,
+  BackHandler,
   TouchableOpacity,
+  Image,
+  ActivityIndicator,
   PermissionsAndroid,
-  Alert,
+  ToastAndroid,
+  Alert
 } from 'react-native';
 import React, {useEffect, useState, useCallback} from 'react';
-import YoutubePlayer from 'react-native-youtube-iframe';
+import YoutubePlayer, {getYoutubeMeta} from 'react-native-youtube-iframe';
 import ytdl from 'react-native-ytdl';
 import RNFetchBlob from 'rn-fetch-blob';
+import TrackPlayer, {
+  Capability,
+  usePlaybackState,
+  useProgress,
+  State,
+  AppKilledPlaybackBehavior,
+  useTrackPlayerEvents,
+  Event,
+} from 'react-native-track-player';
+import {useSelector, useDispatch} from 'react-redux';
+import {toggle} from '../redux/slices/AudioPlayer';
 
-const WatchVideoScreen = ({route, navigation}) => {
-  const {Url} = route.params;
+const WatchVideoScreen = ({navigate, routeparams}) => {
+  //const Url = 'SImyUKhAwzs'
+  const Url = routeparams;
   const youtubeURL = `http://www.youtube.com/watch?v=${Url}`;
+  const [playing, setPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [meta, setMeta] = useState({});
+  const [isLoading, setLoading] = useState(false);
+  const [AudioUrl,setAudioUrl] = useState('')
+  const [playlist, setPlaylist] = useState([]);
+  const dispatch = useDispatch();
+  const toggleState = useSelector(state => state.toggle);
+  const playbackState = usePlaybackState();
+
+  const showToastWithGravity = err => {
+    ToastAndroid.showWithGravity(
+      `${err}`,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
+  };
 
   const GetPermission = async () => {
     try {
@@ -33,7 +64,7 @@ const WatchVideoScreen = ({route, navigation}) => {
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         DownloadVideo();
       } else {
-        DownloadVideo();
+        showToastWithGravity('Problem Occured');
         //console.log('Download permission denied');
       }
     } catch (err) {
@@ -45,11 +76,11 @@ const WatchVideoScreen = ({route, navigation}) => {
     const {config, fs} = RNFetchBlob;
     const fileDir = fs.dirs.DownloadDir;
     const date = new Date();
-    
+
     try {
       const resp = await ytdl(youtubeURL, {quality: 'highest'});
       console.log(resp[0].url);
-     
+
       config({
         // add this option that makes response data to be stored as a file,
         // this is much more performant.
@@ -71,63 +102,274 @@ const WatchVideoScreen = ({route, navigation}) => {
         .then(res => {
           // the temp file path
           console.log('The file saved to ', res.path());
-          alert('File Downloaded');
+          Alert('File Downloaded');
         });
     } catch (err) {
       console.log(err);
     }
   };
 
-  const [playing, setPlaying] = useState(false);
-
-  const onStateChange = useCallback(state => {
-    if (state === 'ended') {
-      setPlaying(false);
-      Alert.alert('video has finished playing!');
+  const YoutubAudio = async () => {
+    try {
+      let info = await ytdl.getInfo(Url);
+      let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+      //console.log('Youtube Audio', audioFormats[0].url);
+      setAudioUrl(audioFormats[0].url)
+    } catch (err) {
+      console.log(err);
     }
-  }, []);
+  };
 
-  const togglePlaying = useCallback(() => {
-    setPlaying(prev => !prev);
-  }, []);
+  const setup = async () => {
+    await TrackPlayer.setupPlayer();
+    dispatch(toggle());
+    //await TrackPlayer.add(songs);
+    await TrackPlayer.updateOptions({
+      capabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+        Capability.Stop,
+      ],
+      stopWithApp: true,
+      waitForBuffer: true,
+    });
+  };
+
+  const loadPlaylist = async () => {
+    await TrackPlayer.reset();
+    const playlistData = [
+      {
+        id: '1',
+        url: AudioUrl,
+        title: meta.title,
+        artist: meta.author_name,
+      },
+      // ... other tracks
+    ];
+    await TrackPlayer.add(playlistData);
+    setPlaylist(playlistData);
+  };
+
+  const togglePlayback = async () => {
+  
+    const playbackState = await TrackPlayer.getState();
+    console.log('Top', playbackState);
+    try {
+      if (playbackState === State.Paused) {
+        console.log('Paused', playbackState);
+        await TrackPlayer.play();
+        setIsPlaying(true);
+      } else if (playbackState === State.Playing || playbackState === State.Buffering) {
+        console.log('Playing', playbackState);
+        await TrackPlayer.pause();
+        setIsPlaying(false);
+      } else {
+        console.log('Else', playbackState);
+        const playlistData = [
+          {
+            id: '1',
+            url: AudioUrl,
+            title: meta.title,
+            artist: meta.author_name,
+          },
+          // ... other tracks
+        ];
+        await TrackPlayer.add(playlistData);
+        setPlaylist(playlistData);
+        await TrackPlayer.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.log('Error in togglePlayback:', error);
+    }
+  };
+
+  const onStateChange = useCallback(
+    (state) => {
+      if (state === 'ended') {
+        setPlaying(false);
+        Alert.alert('Completed', 'Watching video Completed', [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {text: 'OK', onPress: () => console.log('OK Pressed')},
+        ]);
+      }
+    },
+    []
+  );
+
+  const GetMeta = async () => {
+    await getYoutubeMeta('sNhhvQGsMEc').then(meta => {
+      setMeta(meta)
+    });
+  }
+
+ 
+
+  useEffect(() => {
+    if(!toggleState){
+      setup();
+      YoutubAudio().then(()=>{
+        GetMeta();
+      }).then(()=>{
+        loadPlaylist();
+      })
+      
+      
+    }else{
+      YoutubAudio().then(()=>{
+        GetMeta();
+      }).then(()=>{
+        loadPlaylist();
+      })
+    }
+    
+    
+
+    return () => {
+      TrackPlayer.remove(playlist.map((track) => track.id));
+    }
+  },[]);
+
 
   return (
-    <View style={{flex: 1}}>
-      <YoutubePlayer
-        height={300}
-        play={playing}
-        videoId={Url}
-        onChangeState={onStateChange}
-      />
-      <View style={{alignItems: 'center'}}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: 'red',
-            height: 30,
-            width: 150,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-          onPress={() => {
-            GetPermission();
-          }}>
-          <Text style={{color: '#000'}}>Download This Video</Text>
-        </TouchableOpacity>
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <View
+        style={{
+          backgroundColor: '#fff',
+          borderWidth: 5,
+          borderColor: 'red',
+          height: '30%',
+          width: '100%',
+        }}>
+        <YoutubePlayer
+          height="100%"
+          play={playing}
+          videoId={Url}
+          onChangeState={onStateChange}
+        />
       </View>
-      {/* <Button title={playing ? "pause" : "play"} onPress={togglePlaying} /> */}
+      <View
+        style={{
+          backgroundColor: '#fff',
+          borderWidth: 5,
+          borderColor: 'green',
+          height: '20%',
+          width: '100%',
+        }}>
+        <View
+          style={{
+            backgroundColor: '#fff',
+            borderWidth: 5,
+            borderColor: 'pink',
+            height: '60%',
+            width: '100%',
+          }}>
+          <Text style={{color: '#000', fontSize: 15, fontWeight: '700'}}>
+            {meta.title}
+          </Text>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            backgroundColor: '#fff',
+            borderWidth: 5,
+            borderColor: 'orange',
+            height: '40%',
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+          }}>
+          <View>
+            <TouchableOpacity
+              onPress={() => {
+                GetPermission();
+              }}
+              style={{
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Image
+                source={require('../../assets/download.png')}
+                style={{width: 20, height: 20}}
+              />
+            </TouchableOpacity>
+            <Text style={{color: '#000', fontSize: 10, fontWeight: '700'}}>
+              Download
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Image
+              source={require('../../assets/download.png')}
+              style={{width: '90%', height: '50%'}}
+            />
+            <Text style={{color: '#000', fontSize: 10, fontWeight: '700'}}>
+              720P
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Image
+              source={require('../../assets/download.png')}
+              style={{width: '70%', height: '50%'}}
+            />
+            <Text style={{color: '#000', fontSize: 10, fontWeight: '700'}}>
+              1080P
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View
+        style={{
+          backgroundColor: '#fff',
+          borderWidth: 5,
+          borderColor: 'yellow',
+          height: '50%',
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : (
+          <TouchableOpacity
+            onPress={() => {togglePlayback()}}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '35%',
+              height: '30%',
+            }}>
+              {isPlaying ? <Image
+              source={require('../../assets/pause-black.png')}
+              style={{width: '40%', height: '60%'}}
+            /> : <Image
+              source={require('../../assets/play-black.png')}
+              style={{width: '40%', height: '60%'}}
+            />}
+          </TouchableOpacity>
+        )}
+        <Text style={{color: '#000', fontSize: 20, fontWeight: '700'}}>
+          Play Audio In Background
+        </Text>
+      </View>
     </View>
   );
 };
 
-var styles = StyleSheet.create({
-  backgroundVideo: {
-    position: 'absolute',
-    width: '100%',
-    height: 200,
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
-  },
-});
 export default WatchVideoScreen;

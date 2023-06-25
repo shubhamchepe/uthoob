@@ -7,22 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:608392861272:android:e0577b9001c310a5addc2d",
+        "mobilesdk_app_id": "1:608392861272:android:9b5c61bb55581d4aaddc2d",
         "android_client_info": {
           "package_name": "com.uthoob.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "608392861272-nlt89bknr37g0bg6gh30s9adda68oite.apps.googleusercontent.com",
+          "client_id": "608392861272-53k4e3462oe4m41369kqujcbn8650kg5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.uthoob.app",
-            "certificate_hash": "950c705162744ae8f9b43171bfedd3d8b9edaa15"
+            "certificate_hash": "fb677ade06db09679aa7eed6a5f0711bcbf564f4"
           }
         },
         {
-          "client_id": "608392861272-4fjcdgbv2n1145msou2ra1fsto9hrmmt.apps.googleusercontent.com",
+          "client_id": "608392861272-v746tcq60fajc7bb5u29h6m5ojb0kmlt.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

@@ -1,88 +1,175 @@
-import { View, Text,ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text,ScrollView,BackHandler,ToastAndroid,Image } from 'react-native'
+import React, { useEffect, useState,useRef } from 'react'
 import HeaderComponent from './components/HeaderComponent'
 import SubscriptionComponent from './components/SubscriptionComponent'
 import VideoCard from './components/VideoCard'
 import axios from 'axios';
+import auth from '@react-native-firebase/auth';
+import TrackPlayer, {
+  Capability,
+  usePlaybackState,
+  useProgress,
+  State,
+  AppKilledPlaybackBehavior,
+  useTrackPlayerEvents,
+  Event,
+} from 'react-native-track-player';
+import WatchVideoScreen from './WatchVideoScreen'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {API_KEY} from '@env';
+import {useSelector, useDispatch} from 'react-redux';
+import {fetchSubs} from '../redux/slices/SubsData';
 
 
 
 
 
-
-
-const Screen1 = ({props,NavigationProps}) => {
+const Screen1 = ({props,NavigationProps,AccessToken}) => {
   //console.log(NavigationProps)
-  const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjYwODNkZDU5ODE2NzNmNjYxZmRlOWRhZTY0NmI2ZjAzODBhMDE0NWMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2MDgzOTI4NjEyNzItbmx0ODlia25yMzdnMGJnNmdoMzBzOWFkZGE2OG9pdGUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI2MDgzOTI4NjEyNzItNGZqY2RnYnYybjExNDVtc291MnJhMWZzdG85aHJtbXQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTMxMTIwMTYwMjQxODkyOTM3MzciLCJlbWFpbCI6ImhlbWFudGNoZXBlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiU2h1YmhhbSBDaGVwZSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQWNIVHRjdTFDbTZVZVc5V2R2UEZCQ2EzSHNlUmZjY3NWTTBsb0VGWGZzLWx3PXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6IlNodWJoYW0gQ2hlcGUiLCJsb2NhbGUiOiJlbiIsImlhdCI6MTY4NjA1Nzk3OCwiZXhwIjoxNjg2MDYxNTc4fQ.dEUfjuseySoNBojiOrV9NZFaMKinzL6_rgEymQXT5TWxFAsjCZByuiEO5xfVKulj_0FP3hr3KN3FyYAOsY3oxDfpmf2QMUMinvxcPpLJ_K48MA48ZYZ7Gr4LdxNeSyipjYJrfGrjl1TKlBMqhwTC4IJDrMhdGjlIu5bB3vmKYjYA06JsVA_Y1l9TAYOOBhtFbZ_AguoV4atbfk2cTC9VLwJlTKmbnCH1MhiUjooLb2q438VwvrPQV_MNZWZVOigoZZ9NQzbCth0iXmC1NzP9uP7MlZlT8UjTr-lVddKU4tqwieawmxNcAfuDKDH_AFIIFDOEIdhYh9vxBL-boGMgEg";
+  const token = AccessToken;
   const [CardData,SetCardData] = useState([]);
   const [VideoData,SetVideoData] = useState([]);
+  const [profiledata, Setprofiledata] = useState(null);
+  const [currentScreen, setCurrentScreen] = useState('screen1');
+  const [screenParams, setScreenParams] = useState('');
+  const dispatch = useDispatch();
 
-  // const optionsForGettingSubs = {
-  //   method: 'GET',
-  //   url: 'https://youtube.googleapis.com/youtube/v3/subscriptions?mine=true&key=AIzaSyC0ARIY_t8yYMM2RfO-gM24ETOmzYes5cc',
-  //   params: {
-  //     part: 'snippet,contentDetails',
-  //     channelId: 'UCMy7Cj-LHsIZnqpVJJdwIyA',
-  //     maxResults: '30',
-  //     order: 'relevance'
-  //   },
-  //   headers: {
-  //     'Content-type': 'application/json',
-  //      'Authorization': `Bearer ${token}`,
-  //   }
-  // };
-  
+
+  const showToastWithGravity = (err) => {
+    ToastAndroid.showWithGravity(
+      `${err}`,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
+  };
+
+
+  const getCurrentUser = async () => {
+    const currentUser = auth().currentUser;
+
+if (currentUser) {
+  // User is signed in
+  const { uid, displayName, email, photoURL } = currentUser;
+   Setprofiledata(currentUser);
+  // Access the user's data
+  console.log('User ID:', uid);
+  console.log('Display Name:', displayName);
+  console.log('Email:', email);
+  console.log('Photo URL:', photoURL);
+} else {
+  // No user is signed in
+  console.log('No user is signed in.');
+}
+  };
   const GetSubs = async () => {
+    dispatch(fetchSubs(token))
     const headers = { 'Authorization': `Bearer ${token}` }; // auth header with bearer token
-    fetch('https://youtube.googleapis.com/youtube/v3/channels?part=snippet%2CcontentDetails&mine=true&key=AIzaSyC0ARIY_t8yYMM2RfO-gM24ETOmzYes5cc', { headers })
-    .then(response => response.json()).then(resp => console.log(resp))
-  //   try {
-  //   const response = await axios.request(optionsForGettingSubs);
-  //  console.log('Get Subs',response);
-  //   SetCardData(response.data.items)
-  // } catch (error) {
-  //   console.error('Error From Get Subs',error);
-  // }
+    fetch(`https://youtube.googleapis.com/youtube/v3/subscriptions?part=snippet&maxResults=50&mine=true&key=${API_KEY}`, { headers })
+    .then(response => response.json()).then(async (resp) => {
+      //console.log(resp.items[0].snippet)
+      SetCardData(resp.items)
+      //Saving data locally to avoid api calls
+      try{
+        const jsonValue = JSON.stringify(resp.items);
+        await AsyncStorage.setItem('SubsDataAsync', jsonValue);
+      }catch(error){
+        console.log(error)
+      }
+      
+
+    }).catch(err => showToastWithGravity('Come After 24-Hours'))
+
 }
 
-const options = {
-  method: 'GET',
-  url: 'https://youtube-v311.p.rapidapi.com/search/',
-  params: {
-    part: 'snippet',
-    channelId: 'UC7dLvCYNwhYe-l__yczFp1Q',
-    maxResults: '50',
-    order: 'date',
-    safeSearch: 'moderate',
-    type: 'video,channel,playlist'
-  },
-  headers: {
-    'X-RapidAPI-Key': '2b0424bbf6msh9a933d40c813bbbp1b475bjsn2606ff9b0067',
-    'X-RapidAPI-Host': 'youtube-v311.p.rapidapi.com'
+const CheckApiDataAsync = async () => {
+try{
+  const jsonValue = await AsyncStorage.getItem('SubsDataAsync');
+  if(jsonValue !== null){
+    console.log('Getting Subs From Async')
+    const carddata = JSON.parse(jsonValue)
+    SetCardData(carddata)
+  }else{
+    console.log('Getting Subs From API')
+    GetSubs();
   }
-};
-
-const GetVideos = async () => {
-  try {
-    const response = await axios.request(options);
-    console.log('Get Vdos',response);
-    SetVideoData(response.data.items)
-  } catch (error) {
-    console.error('Error From Get Vdos',error);
-  }
+}catch(e){
+ console.log('Error from CheckApiDataAsync',e)
 }
+}
+
 
 
 useEffect(() => {
-  GetSubs().then(GetVideos());
+
+  CheckApiDataAsync();
+
+  getCurrentUser();
+
+  //ApiCheck();
+ 
+  
+  
+console.log('Screen 1 Ran')
+  // return () => {
+  //   backHandler.remove();
+  //   try { TrackPlayer.reset() } catch(err){console.log(err)};
+  // };
+  
 }, []);
+const ref = useRef();
+const onPressTouch = () => {
+  ref.current?.scrollTo({
+    y: 0,
+    animated: true,
+  });
+}
+
+const renderScreen = () => {
+  switch (currentScreen) {
+    case 'screen1':
+      return (<View style={{flex:1}} navigate={navigate}>
+              <HeaderComponent profilepic={profiledata}/>
+               <SubscriptionComponent props={CardData} tokenProp={token} />
+             <VideoCard SomeProp={props} SomeOtherProps={NavigationProps} navigate={navigate} routeparams={routeparams}/>
+            </View>);
+    case 'screen2':
+      return <WatchVideoScreen navigate={navigate} routeparams={screenParams}/>;
+    case 'screen3':
+      return (<View style={{flex:1}} navigate={navigate}>
+                <HeaderComponent profilepic={profiledata}/>
+                  <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+                   <Image source={require('../../assets/biki.png')} style={{width:100, height:100}}/>
+                   <Text style={{color:'#000'}}>App is working fine! there's some issue with YouTube</Text>
+                  </View>
+             </View>);  
+    default:
+      return null;
+  }
+};
+
+
+
+const navigate = (screenName) => {
+  setCurrentScreen(screenName);
+};
+
+const routeparams = (params) => {
+  setScreenParams(params)
+}
+
+const ApiCheck = () => {
+  if(CardData === undefined){
+    setCurrentScreen('screen1')
+  }else{
+    setCurrentScreen('screen3')
+  }
+}
+
+//return renderScreen();
+
      
   return (
-    <View style={{flex:1}}>
-      <HeaderComponent/>
-      <SubscriptionComponent props={CardData}/>
-      <VideoCard SomeProp={props} SomeOtherProps={NavigationProps}/>
-    </View>
+    renderScreen()
   )
 }
 

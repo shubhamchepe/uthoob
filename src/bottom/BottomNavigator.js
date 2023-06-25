@@ -8,7 +8,7 @@ import WatchVideoScreen from './WatchVideoScreen';
 
 const Bottom = createBottomTabNavigator();
 
-const BottomNavigator = ({NavProps}) => {
+const BottomNavigator = ({NavProps,Access}) => {
   return (
     <Bottom.Navigator>
         <Bottom.Screen name='Subscribed' 
@@ -20,19 +20,27 @@ const BottomNavigator = ({NavProps}) => {
               {(props) => (
         <Screen1
             NavigationProps={NavProps}
+            AccessToken = {Access}
         />
     )}
         </Bottom.Screen>
-        <Bottom.Screen name='To-Do List' component={Screen2} options={{headerShown: false, tabBarIcon:() => {
+        <Bottom.Screen name='To-Do List' options={{headerShown: false, tabBarIcon:() => {
           return(
             <Image source={require('../../assets/todo.png')} style={{width:30, height:30}}/>
           )
-        }}}/>
+        }}}>
+                  {(props) => (
+        <Screen2
+            NavigationProps={NavProps}
+            AccessToken = {Access}
+        />
+    )}
+    </Bottom.Screen>
         <Bottom.Screen name='Study Music' component={Screen3} options={{headerShown: false, tabBarIcon:() => {
           return(
             <Image source={require('../../assets/calm.png')} style={{width:30, height:30}}/>
           )
-        }}}/>
+        }, tabBarStyle: {display: 'none'}}}/>
     </Bottom.Navigator>
   )
 }
