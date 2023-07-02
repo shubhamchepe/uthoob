@@ -22,12 +22,18 @@ import TrackPlayer, {
   useTrackPlayerEvents,
   Event,
 } from 'react-native-track-player';
+import Orientation from '@imonk777/react-native-orientation-locker';
 import {useSelector, useDispatch} from 'react-redux';
 import {toggle} from '../redux/slices/AudioPlayer';
 
-const WatchVideoScreen = ({navigate, routeparams}) => {
+const WatchVideoScreen = ({navigate, routeparams,pops,routefunc,NavProps}) => {
+console.log(pops.route.params.Url)
+  const goToScreen1 = () => {
+    navigate('screen1');
+    routefunc(routeparams);
+  };
   //const Url = 'SImyUKhAwzs'
-  const Url = routeparams;
+  const Url = routeparams || pops.route.params.Url || '';
   const youtubeURL = `http://www.youtube.com/watch?v=${Url}`;
   const [playing, setPlaying] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,6 +41,7 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
   const [isLoading, setLoading] = useState(false);
   const [AudioUrl,setAudioUrl] = useState('')
   const [playlist, setPlaylist] = useState([]);
+  const [isLandscape, setIsLandscape] = useState(false);
   const dispatch = useDispatch();
   const toggleState = useSelector(state => state.toggle);
   const playbackState = usePlaybackState();
@@ -45,6 +52,15 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
       ToastAndroid.SHORT,
       ToastAndroid.CENTER,
     );
+  };
+
+  const toggleOrientation = () => {
+    if (isLandscape) {
+      Orientation.lockToPortrait();
+    } else {
+      Orientation.lockToLandscape();
+    }
+    setIsLandscape(!isLandscape);
   };
 
   const GetPermission = async () => {
@@ -62,6 +78,7 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
         },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        showToastWithGravity('Permission Granted');
         DownloadVideo();
       } else {
         showToastWithGravity('Problem Occured');
@@ -102,10 +119,10 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
         .then(res => {
           // the temp file path
           console.log('The file saved to ', res.path());
-          Alert('File Downloaded');
+          Alert.alert('File Downloaded');
         });
     } catch (err) {
-      console.log(err);
+      showToastWithGravity(err);
     }
   };
 
@@ -116,12 +133,17 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
       //console.log('Youtube Audio', audioFormats[0].url);
       setAudioUrl(audioFormats[0].url)
     } catch (err) {
-      console.log(err);
+      showToastWithGravity(err);
     }
   };
 
   const setup = async () => {
-    await TrackPlayer.setupPlayer();
+    try{
+      await TrackPlayer.setupPlayer();
+    }catch(error){
+      console.log(error)
+    }
+    GetMeta(Url);
     dispatch(toggle());
     //await TrackPlayer.add(songs);
     await TrackPlayer.updateOptions({
@@ -138,7 +160,13 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
   };
 
   const loadPlaylist = async () => {
-    await TrackPlayer.reset();
+    GetMeta(Url);
+    try{
+      await TrackPlayer.remove();
+    }catch(error){
+      console.log(error)
+    }
+    
     const playlistData = [
       {
         id: '1',
@@ -148,20 +176,25 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
       },
       // ... other tracks
     ];
-    await TrackPlayer.add(playlistData);
-    setPlaylist(playlistData);
+    try{
+      await TrackPlayer.add(playlistData);
+      setPlaylist(playlistData);
+    }catch(err){
+      console.log(err)
+    }
+    
+    
   };
 
   const togglePlayback = async () => {
-  
     const playbackState = await TrackPlayer.getState();
     console.log('Top', playbackState);
     try {
-      if (playbackState === State.Paused) {
+      if (playbackState === 'paused') {
         console.log('Paused', playbackState);
         await TrackPlayer.play();
         setIsPlaying(true);
-      } else if (playbackState === State.Playing || playbackState === State.Buffering) {
+      } else if (playbackState === 'playing' || playbackState === 'buffering') {
         console.log('Playing', playbackState);
         await TrackPlayer.pause();
         setIsPlaying(false);
@@ -186,55 +219,71 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
     }
   };
 
-  const onStateChange = useCallback(
-    (state) => {
-      if (state === 'ended') {
-        setPlaying(false);
-        Alert.alert('Completed', 'Watching video Completed', [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          {text: 'OK', onPress: () => console.log('OK Pressed')},
-        ]);
-      }
-    },
-    []
-  );
+  // const onStateChange = useCallback(
+  //   (state) => {
+  //     if (state === 'ended') {
+  //       setPlaying(false);
+  //       Alert.alert('Completed', 'Watching video Completed', [
+  //         {
+  //           text: 'Cancel',
+  //           onPress: () => console.log('Cancel Pressed'),
+  //           style: 'cancel',
+  //         },
+  //         {text: 'OK', onPress: () => console.log('OK Pressed')},
+  //       ]);
+  //     }
+  //   },
+  //   []
+  // );
 
-  const GetMeta = async () => {
-    await getYoutubeMeta('sNhhvQGsMEc').then(meta => {
+  const GetMeta = async (Url) => {
+    await getYoutubeMeta(Url).then(meta => {
       setMeta(meta)
-    });
+    }).catch((e)=>console.log(e))
+    await YoutubAudio();
   }
 
  
 
   useEffect(() => {
     if(!toggleState){
-      setup();
-      YoutubAudio().then(()=>{
-        GetMeta();
-      }).then(()=>{
-        loadPlaylist();
-      })
-      
-      
+     setup();
     }else{
-      YoutubAudio().then(()=>{
-        GetMeta();
-      }).then(()=>{
-        loadPlaylist();
-      })
+    loadPlaylist();
     }
-    
-    
 
-    return () => {
-      TrackPlayer.remove(playlist.map((track) => track.id));
+    return  () => {
+      try{
+        TrackPlayer.remove();
+      }catch(err){
+        console.log(err)
+      }
     }
   },[]);
+
+  useEffect(() => {
+    
+    if (routeparams !== undefined) {
+      console.log('Back Action Also Ran')
+      const backAction = () => {
+        Alert.alert('Hold on!', 'Are you sure you want to go back?', [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          { text: 'YES', onPress: () => navigate('screen1') },
+        ]);
+        return true;
+      };
+  
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+  
+      return () => {
+        backHandler.remove();
+      };
+    }
+  }, [routeparams]);
 
 
   return (
@@ -242,8 +291,8 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
       <View
         style={{
           backgroundColor: '#fff',
-          borderWidth: 5,
-          borderColor: 'red',
+          //borderWidth: 5,
+          //borderColor: 'red',
           height: '30%',
           width: '100%',
         }}>
@@ -251,26 +300,27 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
           height="100%"
           play={playing}
           videoId={Url}
-          onChangeState={onStateChange}
+          //onChangeState={onStateChange}
+          onFullScreenChange={toggleOrientation}
         />
       </View>
       <View
         style={{
           backgroundColor: '#fff',
-          borderWidth: 5,
-          borderColor: 'green',
+          //borderWidth: 5,
+          //borderColor: 'green',
           height: '20%',
           width: '100%',
         }}>
         <View
           style={{
             backgroundColor: '#fff',
-            borderWidth: 5,
-            borderColor: 'pink',
+            //borderWidth: 5,
+            //borderColor: 'pink',
             height: '60%',
             width: '100%',
           }}>
-          <Text style={{color: '#000', fontSize: 15, fontWeight: '700'}}>
+          <Text style={{color: '#000', fontSize: 15, fontWeight: '700',marginLeft:10,marginTop:8}} ellipsizeMode="tail" numberOfLines={2}>
             {meta.title}
           </Text>
         </View>
@@ -278,8 +328,8 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
           style={{
             flexDirection: 'row',
             backgroundColor: '#fff',
-            borderWidth: 5,
-            borderColor: 'orange',
+            //borderWidth: 5,
+            //borderColor: 'orange',
             height: '40%',
             width: '100%',
             alignItems: 'center',
@@ -304,41 +354,13 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
               Download
             </Text>
           </View>
-          <TouchableOpacity
-            style={{
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Image
-              source={require('../../assets/download.png')}
-              style={{width: '90%', height: '50%'}}
-            />
-            <Text style={{color: '#000', fontSize: 10, fontWeight: '700'}}>
-              720P
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Image
-              source={require('../../assets/download.png')}
-              style={{width: '70%', height: '50%'}}
-            />
-            <Text style={{color: '#000', fontSize: 10, fontWeight: '700'}}>
-              1080P
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
       <View
         style={{
           backgroundColor: '#fff',
-          borderWidth: 5,
-          borderColor: 'yellow',
+          //borderWidth: 5,
+          //borderColor: 'yellow',
           height: '50%',
           width: '100%',
           alignItems: 'center',
@@ -348,7 +370,7 @@ const WatchVideoScreen = ({navigate, routeparams}) => {
           <ActivityIndicator size="small" color="#0000ff" />
         ) : (
           <TouchableOpacity
-            onPress={() => {togglePlayback()}}
+          onPress={() => togglePlayback()}
             style={{
               alignItems: 'center',
               justifyContent: 'center',

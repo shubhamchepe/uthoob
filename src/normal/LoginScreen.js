@@ -22,7 +22,6 @@ import { WebView } from 'react-native-webview';
 import * as Keychain from 'react-native-keychain';
 import DeviceInfo from 'react-native-device-info'
 import firestore from '@react-native-firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CLIENT_ID} from '@env';
 
 
@@ -55,7 +54,6 @@ const LoginScreen = ({route,navigation}) => {
   };
   const signIn = async () => {
     try{
-      await AsyncStorage.removeItem('SubsDataAsync')
       await Keychain.resetGenericPassword();
     }catch(e){
       console.log(e)
@@ -104,7 +102,7 @@ const LoginScreen = ({route,navigation}) => {
             console.log('No user is signed in.');
           }
           
-            navigation.navigate('PaymentScreen',{access:result.accessToken,username:currentUser.displayName})
+            navigation.navigate('PaymentScreen',{access:result.accessToken,username:currentUser.displayName,userdata:currentUser})
           } else {
             console.log('No credentials stored');
           }

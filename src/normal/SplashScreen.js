@@ -6,6 +6,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import * as Keychain from 'react-native-keychain';
 import moment from 'moment';
+import auth from '@react-native-firebase/auth';
 import {refresh} from 'react-native-app-auth';
 import DeviceInfo from 'react-native-device-info';
 import firestore from '@react-native-firebase/firestore';
@@ -15,6 +16,7 @@ import {CLIENT_ID,API_KEY} from '@env';
 const SplashScreen = ({navigation}) => {
   const [LoggedIn, setLoggedIn] = useState(false);
   const [UpdateData, SetUpdateData] = useState({});
+  const [Profile, SetProfile] = useState({});
   useEffect(() => {
     isSignedIn();
   });
@@ -58,8 +60,8 @@ const SplashScreen = ({navigation}) => {
               await Keychain.resetGenericPassword();
               navigation.navigate('LoginScreen', {modal: version.docs[0]._data});
             } else {
-              navigation.navigate('ParentScreen', {
-                access: something.InitialAccessToken,
+              navigation.replace('ParentScreen', {
+                access: something.InitialAccessToken
               });
             }
             //console.log(resp.items);

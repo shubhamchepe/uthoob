@@ -4,26 +4,45 @@ import {
   useWindowDimensions,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
+  useColorScheme
 } from 'react-native';
-import React from 'react';
+import React,{useState,useEffect} from 'react';
+import auth from '@react-native-firebase/auth';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSelector, useDispatch} from 'react-redux';
-import {toggle} from '../redux/slices/AudioPlayer';
+
+
+
 
 const HeaderComponent = ({profilepic}) => {
   //console.log(profilepic.photoURL)
-  const {height, width} = useWindowDimensions();
-  const dispatch = useDispatch();
   const toggleState = useSelector(state => state.toggle);
-  
+  const watchList = useSelector(state => state.watchList.watchList)
+  const isDarkMode = useColorScheme() === 'dark';
+  const [Profile, SetProfile] = useState({});
+
+  const GetProfileData = () => {
+    const currentUser = auth().currentUser;
+    if (currentUser) {
+      // User is signed in
+      const { uid, displayName, email, photoURL } = currentUser;
+       SetProfile(currentUser);
+    }
+  }
+
+  useEffect(()=>{
+    GetProfileData()
+    console.log('Header',Profile.photoURL)
+  },[])
+
   return (
-    <LinearGradient
-    colors={['#B50000', '#FF1B1B', '#FF0000']}
+    <View
       style={{
         height: '8%',
-        backgroundColor: '#cacaca',
+        backgroundColor: isDarkMode ? '#282828' : '#fff',
         flexDirection: 'row',
-        elevation: 6,
+        elevation: 6
       }}>
       <View
         style={{
@@ -33,28 +52,31 @@ const HeaderComponent = ({profilepic}) => {
           paddingLeft: 10,
         }}>
         <Image
-          source={require('../../../assets/play.png')}
-          style={{width: 20, height: 20}}
+          source={require('../../../assets/play_store_512.png')}
+          style={{width: 25, height: 25,borderRadius:5}}
         />
         <Text
           style={{
             marginLeft: 10,
             fontWeight: '900',
             fontSize: 20,
-            color: '#fff',
+            color: isDarkMode ? '#fff' : '#282828',
           }}>
-          {toggleState.toString()}
+          UTHOOB
         </Text>
       </View>
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
         <TouchableOpacity>
-          <Image
-            source={require('../../../assets/play.png')}
+          {Profile.photoURL === undefined || Profile.photoURL === null ? (
+            <ActivityIndicator/>
+          ) : (<Image
+            source={{uri: Profile.photoURL}}
             style={{width: 30, height: 30, borderRadius: 20, marginRight: 10}}
-          />
+          />)}
+          
         </TouchableOpacity>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 

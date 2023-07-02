@@ -1,16 +1,20 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text, Image,useColorScheme } from 'react-native'
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import Screen1 from './Screen1';
 import Screen2 from './Screen2';
 import Screen3 from './Screen3';
-import WatchVideoScreen from './WatchVideoScreen';
+import UiTest from './UiTest'
 
 const Bottom = createBottomTabNavigator();
 
 const BottomNavigator = ({NavProps,Access}) => {
+  const isDarkMode = useColorScheme() === 'dark';
+
   return (
-    <Bottom.Navigator>
+    <Bottom.Navigator  screenOptions={{
+      tabBarStyle: { backgroundColor: isDarkMode ? '#282828' : '#fff' },
+    }}>
         <Bottom.Screen name='Subscribed' 
          options={{headerShown: false, tabBarIcon:() => {
           return(

@@ -10,7 +10,10 @@ import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
 import com.oblador.keychain.KeychainPackage;
 import com.ocetnik.timer.BackgroundTimerPackage;
+import org.wonday.orientation.OrientationPackage;
+import org.wonday.orientation.OrientationActivityLifecycle;
 import com.BV.LinearGradient.LinearGradientPackage;
+import com.asterinet.react.bgactions.BackgroundActionsPackage;
 import java.util.List;
 
 
@@ -64,5 +67,6 @@ public class MainApplication extends Application implements ReactApplication {
       DefaultNewArchitectureEntryPoint.load();
     }
     ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+    registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
   }
 }

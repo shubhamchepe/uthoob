@@ -1,5 +1,4 @@
-import {View, Text} from 'react-native';
-import React from 'react';
+import * as React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
@@ -17,33 +16,34 @@ const AppNavigator = () => {
   return (
     <Provider store={store}>
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator options={{orientation:'all'}}>
         <Stack.Screen
           name="SplashScreen"
           component={SplashScreen}
           options={{headerShown: false}}
+        />
+           <Stack.Screen 
+         name="LoginScreen"
+         component={LoginScreen}
+         options={{headerShown: false}}
+        />
+           <Stack.Screen 
+         name="PaymentScreen"
+         component={PaymentScreen}
+         options={{headerShown: false}}
         />
         <Stack.Screen 
          name="ParentScreen"
          component={ParentScreen}
          options={{headerShown: false, orientation:'all'}}
         />
-        <Stack.Screen 
-         name="LoginScreen"
-         component={LoginScreen}
-         options={{headerShown: false}}
-        />
-         <Stack.Screen 
+     
+         {/* <Stack.Screen 
          name="WatchVideoScreen"
          component={WatchVideoScreen}
-         options={{headerShown: false, orientation:'all',detachPreviousScreen:true}}
+         options={{headerShown: false, orientation:'all'}}
          
-        />
-         <Stack.Screen 
-         name="PaymentScreen"
-         component={PaymentScreen}
-         options={{headerShown: false}}
-        />
+        /> */}
       </Stack.Navigator>
     </NavigationContainer>
     </Provider>

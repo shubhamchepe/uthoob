@@ -9,6 +9,7 @@ import {
   Animated,
   Button,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import React, {useEffect, useState, useRef} from 'react';
 import {MotiView} from 'moti/build';
 import {Easing} from 'react-native-reanimated';
@@ -36,6 +37,7 @@ const Screen3 = () => {
   const [isPlayerReady, setPlayerReady] = useState(false);
   const dispatch = useDispatch();
   const toggleState = useSelector(state => state.toggle);
+  
 
   useEffect(() => {
     if(!toggleState){
@@ -43,8 +45,9 @@ const Screen3 = () => {
     }else{
       loadPlaylist();
     }
-    return () => {
-      TrackPlayer.remove(songs.map((track) => track.id));
+    return async () => {
+      await TrackPlayer.remove();
+      await TrackPlayer.reset();
     }
   },[]);
 
@@ -228,7 +231,7 @@ const Screen3 = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={['#282828', '#282828', '#282828']} style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Image
@@ -248,8 +251,11 @@ const Screen3 = () => {
 
       {/* Controls */}
       <View style={styles.controlsContainer}>
-        <TouchableOpacity onPress={skipBackward}>
-          <Text style={styles.skipButton}>{'<<'}</Text>
+        <TouchableOpacity onPress={skipBackward} style={{marginRight:50}}>
+        <Image
+          source={require('../../assets/backward.png')}
+          style={{width:30,height:30}}
+        />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={togglePlayback}>
@@ -264,11 +270,14 @@ const Screen3 = () => {
           </Animated.View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={skipForward}>
-          <Text style={styles.skipButton}>{toggleState.toString()}</Text>
+        <TouchableOpacity onPress={skipForward} style={{marginLeft:50}}>
+        <Image
+          source={require('../../assets/forward.png')}
+          style={{width:30,height:30}}
+        />
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -301,6 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 16,
+    marginBottom:60
   },
   skipButton: {
     fontSize: 32,

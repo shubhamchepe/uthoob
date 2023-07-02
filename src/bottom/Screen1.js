@@ -19,7 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_KEY} from '@env';
 import {useSelector, useDispatch} from 'react-redux';
 import {fetchSubs} from '../redux/slices/SubsData';
-
+import {SubsData} from '../data/SubsData'
+import {Videos} from '../data/Videos'
 
 
 
@@ -62,46 +63,40 @@ if (currentUser) {
 }
   };
   const GetSubs = async () => {
-    dispatch(fetchSubs(token))
     const headers = { 'Authorization': `Bearer ${token}` }; // auth header with bearer token
     fetch(`https://youtube.googleapis.com/youtube/v3/subscriptions?part=snippet&maxResults=50&mine=true&key=${API_KEY}`, { headers })
     .then(response => response.json()).then(async (resp) => {
       //console.log(resp.items[0].snippet)
       SetCardData(resp.items)
       //Saving data locally to avoid api calls
-      try{
-        const jsonValue = JSON.stringify(resp.items);
-        await AsyncStorage.setItem('SubsDataAsync', jsonValue);
-      }catch(error){
-        console.log(error)
-      }
       
 
     }).catch(err => showToastWithGravity('Come After 24-Hours'))
 
 }
 
-const CheckApiDataAsync = async () => {
-try{
-  const jsonValue = await AsyncStorage.getItem('SubsDataAsync');
-  if(jsonValue !== null){
-    console.log('Getting Subs From Async')
-    const carddata = JSON.parse(jsonValue)
-    SetCardData(carddata)
-  }else{
-    console.log('Getting Subs From API')
-    GetSubs();
-  }
-}catch(e){
- console.log('Error from CheckApiDataAsync',e)
-}
-}
+// const CheckApiDataAsync = async () => {
+// try{
+//   const jsonValue = await AsyncStorage.getItem('SubsDataAsync');
+//   if(jsonValue !== null){
+//     console.log('Getting Subs From Async')
+//     const carddata = JSON.parse(jsonValue)
+//     SetCardData(carddata)
+//   }else{
+//     console.log('Getting Subs From API')
+//     GetSubs();
+//   }
+// }catch(e){
+//  console.log('Error from CheckApiDataAsync',e)
+// }
+// }
+
 
 
 
 useEffect(() => {
 
-  CheckApiDataAsync();
+  GetSubs();
 
   getCurrentUser();
 
@@ -110,12 +105,10 @@ useEffect(() => {
   
   
 console.log('Screen 1 Ran')
-  // return () => {
-  //   backHandler.remove();
-  //   try { TrackPlayer.reset() } catch(err){console.log(err)};
-  // };
   
-}, []);
+}, [screenParams]);
+
+
 const ref = useRef();
 const onPressTouch = () => {
   ref.current?.scrollTo({
@@ -124,52 +117,12 @@ const onPressTouch = () => {
   });
 }
 
-const renderScreen = () => {
-  switch (currentScreen) {
-    case 'screen1':
-      return (<View style={{flex:1}} navigate={navigate}>
+  return (
+    <View style={{flex:1}}>
               <HeaderComponent profilepic={profiledata}/>
                <SubscriptionComponent props={CardData} tokenProp={token} />
-             <VideoCard SomeProp={props} SomeOtherProps={NavigationProps} navigate={navigate} routeparams={routeparams}/>
-            </View>);
-    case 'screen2':
-      return <WatchVideoScreen navigate={navigate} routeparams={screenParams}/>;
-    case 'screen3':
-      return (<View style={{flex:1}} navigate={navigate}>
-                <HeaderComponent profilepic={profiledata}/>
-                  <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
-                   <Image source={require('../../assets/biki.png')} style={{width:100, height:100}}/>
-                   <Text style={{color:'#000'}}>App is working fine! there's some issue with YouTube</Text>
-                  </View>
-             </View>);  
-    default:
-      return null;
-  }
-};
-
-
-
-const navigate = (screenName) => {
-  setCurrentScreen(screenName);
-};
-
-const routeparams = (params) => {
-  setScreenParams(params)
-}
-
-const ApiCheck = () => {
-  if(CardData === undefined){
-    setCurrentScreen('screen1')
-  }else{
-    setCurrentScreen('screen3')
-  }
-}
-
-//return renderScreen();
-
-     
-  return (
-    renderScreen()
+             <VideoCard SomeProp={props} SomeOtherProps={NavigationProps} />
+            </View>
   )
 }
 

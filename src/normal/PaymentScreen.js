@@ -5,7 +5,7 @@ import auth from '@react-native-firebase/auth';
 
 const PaymentScreen = ({route,navigation}) => {
     const [profileName, SetprofileName] = useState(null);
-console.log(route);
+console.log(route.params);
     useEffect(() => {
        getCurrentUser();
     },[])
@@ -19,10 +19,10 @@ console.log(route);
       const { uid, displayName, email, photoURL } = currentUser;
        SetprofileName(currentUser.displayName);
       // Access the user's data
-      console.log('User ID:', uid);
-      console.log('Display Name:', displayName);
-      console.log('Email:', email);
-      console.log('Photo URL:', photoURL);
+      // console.log('User ID:', uid);
+      // console.log('Display Name:', displayName);
+      // console.log('Email:', email);
+      // console.log('Photo URL:', photoURL);
     } else {
       // No user is signed in
       console.log('No user is signed in.');
