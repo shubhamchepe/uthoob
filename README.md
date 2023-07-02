@@ -16,3 +16,11 @@ Uthoob is built with a strong emphasis on user experience, striving to provide a
 
 
 ![Ad-Free Youtube No-Distractions Set video reminders until you finish watching them Videos only from your subscription Study music for your deep study sessions Download any Youtube video Play vide](https://github.com/shubhamchepe/uthoob/assets/34737632/5e90d130-ae9a-421a-9a67-05f97b3e80ad)
+
+Hey there! As an individual, I'm thrilled to introduce you to the first version of my app! I want to be upfront with you about the reality of launching a new app - there may be some hiccups along the way. While I've put in a lot of effort to ensure stability, there's always a chance that it may crash or not work as expected from time to time. I'm constantly working behind the scenes to enhance performance and address any issues that arise. Your feedback is incredibly valuable to me as I strive to make this app the best it can be. So please bear with me as I continue to make improvements and deliver updates to enhance your experience. Together, let's embark on this exciting journey and make this app a great success! Thank you for your understanding and support!
+
+![icons8-unicodepad-100](https://github.com/shubhamchepe/uthoob/assets/34737632/f8367067-8f53-498d-96f7-96ed6d956bc8)
+
+YOU CAN DOWNLOAD ANDROID APP FROM HERE
+
+
