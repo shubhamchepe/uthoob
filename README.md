@@ -35,7 +35,9 @@
 </p>
 
 <p align="center">
+  
   <img width="100" height="100" src="https://user-images.githubusercontent.com/34737632/250367610-f8367067-8f53-498d-96f7-96ed6d956bc8.png" alt="info-graphic">
   (https://shorturl.at/filyQ)
+  
   **YOU CAN DOWNLOAD THE ANDROID APP FROM HERE**
 </p>
